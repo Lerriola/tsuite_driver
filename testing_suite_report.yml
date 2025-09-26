@@ -4,13 +4,13 @@
   become_user: tsuite1
   vars:
     ansible_shell_executable: /bin/bash
-    release_version: "5.0.13"
+    release_version: "5.4.0"
     base_dir: "/home/tsuite1/testing_suite_runs"
-    run_dir: "/home/tsuite1/testing_suite_runs/5.0.13/run_2025-09-22_162449"
+    run_dir: "/home/tsuite1/testing_suite_runs/5.4.0/run_2025-09-26_100904"
 
   tasks:
     - name: Check experiment status
-      shell: bash -l -c "~/envs/tsuite-env/bin/testing_suite --status --config_file prod_config.yml > {{ run_dir }}/status.log 2>&1"
+      shell: bash -l -c "~/envs/tsuite-env/bin/testing_suite --status --config_file main_config.yml > {{ run_dir }}/status.log 2>&1"
       args:
         chdir: /home/tsuite1/testing_suite
       register: suite_status
@@ -32,7 +32,6 @@
       debug:
         var: failed_exps.stdout_lines
 
-
     - name: Get latest error and output logs per failed test
       shell: |
         test_id="{{ item.split()[0] }}"
@@ -43,10 +42,11 @@
             latest=$(ls -1t ${log_dir}/${job}*.${ext} 2>/dev/null | head -n1)
             if [ -n "$latest" ]; then
               echo "## ${test_id} (${job}.${ext})"
-              echo "Log: $latest "
-              echo 
+              echo "Log: $latest"
+              echo '```'
               tail -n 15 "$latest"
-              echo 
+              echo '```'
+              echo
             else
               echo "## ${test_id} (${job}.${ext})"
               echo "No log file found"
@@ -67,3 +67,22 @@
           {% for res in failed_logs.results %}
           {{ res.stdout }}
           {% endfor %}
+        owner: tsuite1
+        group: tsuite1
+        mode: '0644'
+      become: true
+
+    - name: Fetch failure report
+      fetch:
+        src: "{{ run_dir }}/failure_report.log"
+        dest: "./failure_report.log"
+        flat: true
+
+    - name: Print failure report on screen
+      delegate_to: localhost
+      command: cat ./failure_report.log
+      register: report_out
+      become: false
+
+    - debug:
+        msg: "{{ report_out.stdout }}"
