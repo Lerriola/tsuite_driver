@@ -28,18 +28,20 @@ sudo apt install -y ansible
 
 To run ansible-playbook on the ClimateDT VM, ensure that you have a passwordless SSH connection set up. Then, edit your inventory.ini file with the host information and user:
 
+```INI
 [testing_vm]
 <VM_SSH_HOST> ansible_user=<VM_USERNAME> ansible_shell_executable=/bin/bash
+```
 
-Replace <VM_SSH_HOST> and <VM_USERNAME> with your VM’s SSH host and username.
+Replace `<VM_SSH_HOST>` and `<VM_USERNAME>` with your VM’s SSH host and username.
 
 3. Main Configuration Variables
 
 Instead of editing the playbooks directly, modify the main yaml file. This is the only entry point for manual configuration:
 
-main.yml:
+**main.yml**:
 
-# Centralized variables for testing suite playbooks
+## 3. Configure Your main tsuite_driver file
 
 ```yaml
 release_version: "5.5.0"
@@ -50,7 +52,7 @@ ansible_shell_executable: /bin/bash
 
 > This ensures that all playbooks always share the same configuration.
 
-4. Running the Playbooks
+## 4. Running the Playbooks
 
 Run the testing suite:
 
@@ -58,8 +60,12 @@ Run the testing suite:
 ansible-playbook -i inventory.ini tsuite_run.yml
 ```
 
+You can check the different run logs in the VM under `/home/tsuite1/testing_suite_runs/<release_version>`.
+
 Generate the run error reports:
 
 ```bash
 ansible-playbook -i inventory.ini tsuite_report.yml
 ```
+
+The reports will be centralized in the `failure_report.log` in the local tsuite driver directory.
