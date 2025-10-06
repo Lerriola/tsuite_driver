@@ -1,0 +1,6 @@
+# Centralized variables for testing suite playbooks
+
+release_version: "5.5.0"
+base_dir: "/home/tsuite1/testing_suite_runs"
+config_file: "main_config.yml"  # or prod_config.yml
+ansible_shell_executable: /bin/bash

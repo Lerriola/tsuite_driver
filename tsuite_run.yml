@@ -1,0 +1,59 @@
+- name: Initialize and run testing suite
+  hosts: testing_vm
+  become: true
+  become_user: tsuite1
+  vars_files:
+    - main.yml
+  tasks:
+    - name: Generate timestamp
+      ansible.builtin.set_fact:
+        timestamp: "{{ lookup('pipe', 'date +%Y-%m-%d_%H%M%S') }}"
+        cacheable: false
+
+    - name: Set run_dir
+      ansible.builtin.set_fact:
+        run_dir: "{{ base_dir }}/{{ release_version }}/run_{{ timestamp }}"
+
+    - name: Create directory for release
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0770"
+        owner: "tsuite1"
+      loop:
+        - "{{ base_dir }}/{{ release_version }}"
+        - "{{ run_dir }}"
+
+    - name: Clean testing suite
+      ansible.builtin.shell: bash -l -c "~/envs/tsuite-env/bin/testing_suite --clean --config_file {{ config_file }} > {{ run_dir }}/clean.log 2>&1"
+      args:
+        chdir: /home/tsuite1/testing_suite
+
+    - name: Refresh testing suite
+      ansible.builtin.shell: bash -l -c "~/envs/tsuite-env/bin/testing_suite --refresh clone --config_file {{ config_file }} > {{ run_dir }}/refresh.log 2>&1"
+      args:
+        chdir: /home/tsuite1/testing_suite
+
+    - name: Create experiments
+      ansible.builtin.shell: bash -l -c "~/envs/tsuite-env/bin/testing_suite --create --config_file {{ config_file }} > {{ run_dir }}/create.log 2>&1"
+      args:
+        chdir: /home/tsuite1/testing_suite
+
+    - name: Run experiments
+      ansible.builtin.shell: bash -l -c "nohup ~/envs/tsuite-env/bin/testing_suite --run --config_file {{ config_file }} > {{ run_dir }}/run.log 2>&1"
+      args:
+        chdir: /home/tsuite1/testing_suite
+
+    - name: Wait before checking status
+      ansible.builtin.pause:
+        minutes: 5   # adjust depending on how long jobs take
+
+    - name: Check experiment status
+      ansible.builtin.shell: bash -l -c "~/envs/tsuite-env/bin/testing_suite --status --config_file {{ config_file }} > {{ run_dir }}/status.log 2>&1"
+      args:
+        chdir: /home/tsuite1/testing_suite
+      register: suite_status
+
+    - name: Show status table
+      ansible.builtin.debug:
+        var: suite_status.stdout
