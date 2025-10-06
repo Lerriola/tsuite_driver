@@ -23,7 +23,13 @@
       loop:
         - "{{ base_dir }}/{{ release_version }}"
         - "{{ run_dir }}"
-
+    - name: Create symlink to latest run
+      ansible.builtin.file:
+        src: "{{ run_dir }}"
+        dest: "{{ base_dir }}/{{ release_version }}/run_latest"
+        state: link
+        force: true
+        owner: tsuite1
     - name: Clean testing suite
       ansible.builtin.shell: bash -l -c "~/envs/tsuite-env/bin/testing_suite --clean --config_file {{ config_file }} > {{ run_dir }}/clean.log 2>&1"
       args:
