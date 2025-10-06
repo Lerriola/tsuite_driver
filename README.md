@@ -35,13 +35,13 @@ To run ansible-playbook on the ClimateDT VM, ensure that you have a passwordless
 
 Replace `<VM_SSH_HOST>` and `<VM_USERNAME>` with your VM’s SSH host and username.
 
-3. Main Configuration Variables
+## 3. Main Configuration Variables
 
 Instead of editing the playbooks directly, modify the main yaml file. This is the only entry point for manual configuration:
 
 **main.yml**:
 
-## 3. Configure Your main tsuite_driver file
+Configure Your main tsuite_driver file as needed:
 
 ```yaml
 release_version: "5.5.0"
